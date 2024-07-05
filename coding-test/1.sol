@@ -47,6 +47,6 @@ mapping(string=>Student) student_mapper;
         return students[i];
     }
   }
-  return students[0];
+  revert("No string matched");
  }
 }

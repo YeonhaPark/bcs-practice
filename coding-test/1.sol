@@ -19,7 +19,8 @@ contract TEST1 {
  }
 
 
- Student[] students;
+Student[] students;
+mapping(string=>Student) student_mapper;
 
  function setStudent(string memory _name, uint _number, uint8 _score) public {
     string memory _grade;
@@ -38,5 +39,14 @@ contract TEST1 {
 
  function getStudents() public view returns(Student[] memory) {
     return students;
+ }
+
+ function getStudent(string memory _name) public view returns(Student memory) {
+  for (uint i = 0; i < students.length; i++) {
+    if (keccak256(abi.encodePacked(students[i].name)) == keccak256(abi.encodePacked(_name))) {
+        return students[i];
+    }
+  }
+  return students[0];
  }
 }

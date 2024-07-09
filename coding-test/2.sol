@@ -21,12 +21,12 @@ contract Marker {
     }
 
     Student[] public students;
-    mapping(string => Student) private studentMapping;
+    mapping(uint => Student) private studentMapping;
 
     function addStudent(uint _number, string memory _name, uint _score) public {
         Student memory newStudent = Student(_number, _name, _score);
         students.push(newStudent);
-        studentMapping[_name] = newStudent;
+        studentMapping[_number] = newStudent;
     }
 
     function getLowest() public view returns(Student memory) {
@@ -53,9 +53,9 @@ contract Marker {
         return getTotalSum() / students.length;
     }
 
-    function getStudent(string memory _name) public view returns(Student memory) {
-        require(bytes(studentMapping[_name].name).length != 0, "Student not found");
-        return studentMapping[_name];
+    function getStudent(uint _number) public view returns(Student memory) {
+        require(bytes(studentMapping[_number].name).length != 0, "Student not found");
+        return studentMapping[_number];
     }
 
 

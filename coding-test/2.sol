@@ -63,3 +63,19 @@ contract Marker {
         return students;
     }
 }
+
+contract Lowest {
+    uint[] public numbers;
+    function pushNumbers(uint _n) public {
+        numbers.push(_n);
+    }
+    function findLowest() public view returns(uint){
+        uint lowest = 2**256 - 1;
+        for (uint i = 0; i < numbers.length; i++) {
+            if (i < lowest) {
+                lowest = numbers[i];
+            }
+        }
+        return lowest;
+    }
+}

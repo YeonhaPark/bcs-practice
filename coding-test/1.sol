@@ -42,14 +42,16 @@ contract TEST1 {
         uint8 number;
         uint8 score;
         string grade;
+        string[] classes;
     }
 
     Student[] students;
 
     mapping(string => uint8) studentScore;
     mapping(uint8 => Student) studentInfoByNumber;
+    mapping(uint8 => Student) studentInfoByScore;
     mapping(string => Student) studentInfoByName;
-
+    mapping(string => bool) isS; 
     /**
      * 90점 이상 A, 80점 이상 B, 70점 이상 C, 60점 이상 D, 나머지는 F 
      */
@@ -69,9 +71,11 @@ contract TEST1 {
     /**
      * 학생 추가 기능 - 특정 학생의 정보를 추가
      */
-    function addStudent(string memory _name, uint8 _score) public {
+    function addStudent(string memory _name, uint8 _score, string[] memory _classes) public {
             string memory grade = getGrade(_score);
-            students.push(Student(_name, uint8(students.length + 1), _score, grade));
+            Student memory newStudent = Student(_name, uint8(students.length + 1), _score, grade, _classes);
+            studentInfoByScore[_score] = newStudent;
+            students.push(newStudent);
     }
     
     /**
@@ -138,5 +142,110 @@ contract TEST1 {
     function testTeacher() public view returns(bool) {
         uint average = getAverage();
         return average >= 70 ? true : false;
+    }
+
+    /**
+     * * 보충반 조회 기능 - F 학점을 받은 학생들의 숫자와 그 전체 정보를 반환 OK
+     */
+    function getFStudents() public view returns(uint, Student[] memory) {
+         uint numbers;
+         for (uint i = 0; i < students.length; i++) {
+            if (keccak256(abi.encodePacked(students[i].grade)) == keccak256(abi.encodePacked('F'))) {
+                numbers++;
+            }
+         }
+        Student[] memory array = new Student[](numbers);
+        uint idx;
+        for (uint i = 0; i < array.length; i++) {
+            array[idx] = students[i];
+            idx++;
+        }
+        return (numbers, array);
+    }
+    
+
+    /**
+     * S반
+     */
+    function sClass() public view returns(Student[] memory) {
+        Student[] memory _students = students; // 통째로 가져오는것
+        for (uint i =0; i < students.length; i++) {
+            for (uint j = i + 1; j < students.length; j++) {
+                if (_students[i].score < _students[j].score) {
+                    (_students[i], _students[j]) = (_students[j], _students[i]);
+                }
+            }
+        }
+        Student[] memory _s = new Student[](4);
+        for (uint i = 0; i < 4; i ++) {
+            _s[i] = _students[i];
+        }
+        return _s;
+    }
+    // 점수만 가지고 가져와보기.
+    function sClass2() public view returns(Student[] memory) {
+        uint8[] memory scores = new uint8[](students.length);
+        Student[] memory sStudents = new Student[](4);
+        for (uint i = 0; i < students.length; i++) {
+            scores[i] = students[i].score;
+        }
+         for (uint i =0; i < scores.length; i++) {
+            for (uint j = i + 1; j < scores.length; j++) {
+                if (scores[i] < scores[j]) {
+                    (scores[i], scores[j]) = (scores[j], scores[i]);
+                }
+            }
+        }
+
+        for (uint i = 0; i < 4; i++) {
+            sStudents[i] = studentInfoByScore[scores[i]];
+        }
+        return sStudents;
+    }
+
+    function sClass3() public view returns(Student[] memory) {
+        // 선택적 삽입, 퀵셀렉트, 정렬후 슬라이싱, 최소힙
+        Student[] memory sStudents = new Student[](4);
+
+    }
+}
+
+contract Array {
+    function setArray(uint _n) public pure returns(uint[4] memory){
+        uint[4] memory numbers;
+        // numbers.push(_n); // Member "push" is not available in uint256[] memory outside of storage.(4994)
+        numbers[0] = _n;
+        return numbers;
+    }
+
+    function setArray2(uint _n) public pure returns(uint[] memory) {
+        uint[] memory numbers = new uint[](_n);
+        return numbers;
+    }
+}
+
+contract Sorting {
+    uint[] public numbers = [5,2,7,9,11,1,3];
+    function ascending() public view returns(uint[] memory) {
+        uint[] memory array = numbers;
+        for (uint i =0; i < numbers.length; i++) {
+            for (uint j = i + 1; j < numbers.length; j++) {
+                if (array[i] > array[j]) {
+                    (array[i], array[j]) = (array[j], array[i]);
+                }
+            }
+        }
+        return array;
+    }
+    function descending() public view returns(uint[] memory) {
+        uint[] memory array = numbers;
+        for (uint i =0; i < numbers.length; i++) {
+            for (uint j = i + 1; j < numbers.length; j++) {
+                if (array[i] < array[j]) {
+                    (array[i], array[j]) = (array[j], array[i]);
+                }
+            }
+        }
+        return array;
     }
 }

@@ -6,26 +6,17 @@ pragma solidity ^0.8.19;
 */
 
 contract TEST1 {
-    uint public a;
-    function setA(uint _a) public {
-        a = _a;
+    function add(uint _a, uint num) public pure returns(uint) {
+        return _a + num;
     }
-
-    function add(uint num) public returns(uint) {
-        a = a + num;
-        return a + num;
+    function mul(uint _a, uint num) public pure returns(uint) {
+        return _a * num;
     }
-    function mul(uint num) public returns(uint) {
-        a = a * num;
-        return a * num;
+    function div(uint _a, uint num) public pure returns(uint) {
+        return _a / num;
     }
-    function div(uint num) public returns(uint) {
-        a = a / num;
-        return a / num;
-    }
-    function pow(uint num) public returns(uint) {
-        a = a ** num;
-        return a ** num;
+    function pow(uint _a, uint num) public pure returns(uint) {
+        return _a ** num;
     }
 }
 
@@ -85,14 +76,16 @@ contract TEST4 {
 */
 
 contract TEST5 {
-    function oneToThree(uint num) public pure returns(uint){
-        return num ** 2;
-    }
-    function fourToSix(uint num) public pure returns(uint){
-        return num * 2;
-    }
-    function sevenToNine(uint num) public pure returns(uint){
-        return num % 3;
+    function oneToThree(uint n) public pure returns(uint){
+        if (n >= 1 && n <= 3) {
+            return n ** 2;
+        } else if (n >= 4 && n <= 6) {
+            return n * 2;
+        } else if (n >= 7 && n <= 9) {
+            return n % 3;
+        } else {
+            revert("The number is out of range");
+        }
     }
 }
 
@@ -170,6 +163,10 @@ contract TEST9 {
     function convert(string memory str) public pure returns(bytes memory) {
         return bytes(str);
     }
+
+    function bytesToString(bytes memory _b) public pure returns(string memory) {
+        return string(_b);
+    }
 }
 
 /*
@@ -187,5 +184,78 @@ contract TEST10 {
     }
     function get(uint index) public view returns(uint) {
         return numbers[index];
+    }
+}
+
+contract Convert {
+    function unitToBytes(uint _n) public pure returns(bytes memory) {
+        return abi.encodePacked(_n);
+    }
+
+    function unit8ToBytes1(uint8 _n) public pure returns(bytes1) {
+        return bytes1(_n);
+    }
+    function bytes1ToUint8(bytes1 _b) public pure returns(uint8) {
+        return uint8(_b);
+    }
+    function bytesToUint(bytes2 _b) public pure returns(uint) {
+        return uint16(_b);
+    }
+    function splitBytes(bytes memory _b) public pure returns(bytes1) {
+        return _b[0];
+    }
+}
+
+contract ABI {
+    function getBytes(string memory _s) public pure returns(bytes memory) {
+        return bytes(_s);
+    }
+
+    // 밸류만 나옴. 
+    function getabiEncodePacked(string memory _s) public pure returns(bytes memory) {
+        return abi.encodePacked(_s);
+    }
+    // 0000000000000000000000000000000000000000000000000000000000000020 1번 의자. 32번째 자리가 끝자리. 여기서 20은 오프셋, 즉 자리. 
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    // 6162000000000000000000000000000000000000000000000000000000000000
+    // 전체의 결과물
+    function getabiEncode(string memory _s) public pure returns(bytes memory) {
+        return abi.encode(_s);
+    }
+    // 0000000000000000000000000000000000000000000000000000000000000040 1) 64byte,, 128 번째 자리 가니깐 길이 2짜리가 온다.
+    // 0000000000000000000000000000000000000000000000000000000000000080 2) This indicates that the dynamic data for _s2 starts at the 128th byte
+    // 0000000000000000000000000000000000000000000000000000000000000002 02: 두 개다. actual data가 시작되는 지점
+    // 6162000000000000000000000000000000000000000000000000000000000000 1)이 시작되는 지점
+    // 0000000000000000000000000000000000000000000000000000000000000002 02: 두 개다.
+    // 6364000000000000000000000000000000000000000000000000000000000000 2)가 시작되는 지점
+    function getabiEncode2(string memory _s1, string memory _s2) public pure returns(bytes memory) {
+        return abi.encode(_s1, _s2);
+    }
+    function getabiEncode3(string memory _s1, string memory _s2) public pure returns(bytes memory) {
+        return abi.encode(_s1, _s2);
+    }
+    // 0000000000000000000000000000000000000000000000000000000000000040 string의 offset
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000003
+    // 6162630000000000000000000000000000000000000000000000000000000000
+    function getabiEncode4(string memory _s, uint _n) public pure returns(bytes memory) {
+        return abi.encode(_s, _n);
+    }
+
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000040
+    // 0000000000000000000000000000000000000000000000000000000000000003
+    // 6162630000000000000000000000000000000000000000000000000000000000
+    function getabiEncode5( uint _n, string memory _s) public pure returns(bytes memory) {
+        return abi.encode(_n, _s);
+    }
+    // 0000000000000000000000000000000000000000000000000000000000000020 offset
+    // 0000000000000000000000000000000000000000000000000000000000000004 자릿수
+    // 0000000000000000000000000000000000000000000000000000000000000010 16
+    // 0000000000000000000000000000000000000000000000000000000000000020 20 
+    // 0000000000000000000000000000000000000000000000000000000000000040
+    // 0000000000000000000000000000000000000000000000000000000000000080
+    function getabiEncode6(uint[] memory _n) public pure returns(bytes memory) {
+        return abi.encode(_n);
     }
 }

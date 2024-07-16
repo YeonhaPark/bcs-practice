@@ -32,72 +32,95 @@ A : 4점, B : 3점 , D : 2점 , F : 1점 부여 후
 
 contract Game {
     struct User {
-        uint num;
+        uint number;
         string name;
         address addr;
         uint balance;
         uint score;
     }
 
-    User[] users;
-    address admin;
-    mapping(string=>User) user;
-    mapping(address => User) public userMap;
+
+    address payable admin;
+    mapping(address => User) users;
+    uint public idx = 1;
+    address[4] room;
 
     constructor() {
-        admin = msg.sender;
+        admin = payable(msg.sender);
     }
 
-    function withdrawAll() public {
+    modifier onlyAdmin {
         require(msg.sender == admin, "Only admin can withdraw");
-        payable(admin).transfer(address(this).balance);
+        _;
     }
 
-    function withdraw(uint amount) public {
-        require(msg.sender == admin, "Only admin can withdraw");
+    modifier checkContractBalance {
+        _;
+        require(address(this).balance >= 2 ether, "Contract balance is below 2 ether");
+    }
+    function withdrawAll() public onlyAdmin {
+        admin.transfer(address(this).balance);
+    }
+
+    function withdraw(uint amount) public onlyAdmin checkContractBalance {
         require(amount <= address(this).balance, "Insufficient contract balance");
 
-        payable(admin).transfer(amount);
+        admin.transfer(amount * 0.01 ether);
     }
 
-    function register(string memory _name) public {
-        require(userMap[msg.sender].addr == address(0), "User already registered");
-         User memory newUser = User({
-            num: users.length + 1,
-            name: _name,
-            addr: msg.sender,
-            balance: 0,
-            score: 4 - users.length
-        });
-        users.push(newUser);
-        userMap[msg.sender] = newUser;
-        if (users.length == 4) {
-           emptyRoom();
+    function signIn(string memory _name) public {
+        require(bytes(users[msg.sender].name).length == 0, "Already Registered");
+        users[msg.sender] = User(idx++, _name, msg.sender, 0, 0);
+    }
+
+    function join(string memory _name) public payable { // payable 이 있으면 msg.value를 다룰 수 있다.
+        require(bytes(users[msg.sender].name).length != 0 && (msg.value >= 0.01 ether || users[msg.sender].balance >= 0.01 ether), "You must send 0.01 ETH");
+
+        if (msg.value < 0.01 ether) {
+            users[msg.sender].balance -= 0.01 ether;
         }
-
+        if (getLength() == 3) {
+            room[3] = msg.sender;
+            getScore();
+            delete room;
+        } else {
+            room[getLength()] = msg.sender;
+        }
+        signIn(_name);
+    }
+    function getUser(address _addr) public view returns (User memory) {
+        return users[_addr];
     }
 
-    function emptyRoom() public {
-        for (uint i = 0; i < 4; i ++) {
-            delete users[i];
+    function getScore() public {
+        for (uint i = 0; i < 4; i++) {
+            users[room[i]].number = 4 - i;
         }
     }
 
-    function join(string memory _name) public payable {
-        require(msg.value >= 0.01 ether, "You must send 0.01 ETH");
-        register(_name);
-
+    function convertScoreToETH(uint amount) public checkContractBalance {
+        require(users[msg.sender].score >= amount, "Not enough score to convert");
+        users[msg.sender].score -= amount;
+        payable(msg.sender).transfer((amount / 10) * 0.1 ether);
     }
-        function getUser(address _addr) public view returns (User memory) {
-        return userMap[_addr];
-    }
-
-    function convertScoreToETH() public {
-        require(userMap[msg.sender].score >= 10, "Not enough score to convert");
-
-        uint ethAmount = (userMap[msg.sender].score / 10) * 0.1 ether;
-        userMap[msg.sender].score %= 10;
-        payable(msg.sender).transfer(ethAmount);
+    function convertAllScoreToETH() public  {
+        require(users[msg.sender].score >= 10, "Not enough score to convert");
+        uint amount = users[msg.sender].score / 10;
+        users[msg.sender].score % 10;
+        payable(msg.sender).transfer(amount * 0.1 ether);
     }
 
+    function getLength() public view returns(uint) {
+        // 처음으로 0을 뱉어내는 곳이 어딘지
+        for (uint i = 0; i < 4; i++) {
+            if (users[room[i]].number == 0) {
+                return i;
+            }
+        }
+        return 4;
+    }
+
+    function deposit() public payable {
+        users[msg.sender].balance += msg.value;
+    }
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 /**
 숫자를 시분초로 변환하세요.
 예) 100 -> 1 min 40 sec
@@ -8,17 +9,23 @@ pragma solidity ^0.8.19;
 5250 -> 1hour 27min 30sec
  */
 
+contract Base {
+    function s_concat(string memory _a, string memory _b) public pure returns(string memory) {
+        return string.concat(_a, _b);
+    }
+}
+
 contract TimeConverter {
-    function convertToTime(uint256 totalSeconds) public pure returns (string memory) {
+    function getHMS(uint256 totalSeconds) public pure returns (uint,uint,uint) {
         uint256 h = totalSeconds / 3600;
         uint256 m = (totalSeconds % 3600) / 60;
         uint256 s = totalSeconds % 60;
 
-        string memory hourStr = h > 0 ? string(abi.encode(h, " hour ", h == 1 ? "" : "s ")) : "";
-        string memory minuteStr = m > 0 ? string(abi.encode(m, " min ")) : "";
-        string memory secondStr = s > 0 ? string(abi.encode(s, " sec")) : "";
-
-        return string(abi.encode(hourStr, minuteStr, secondStr));
+        return (h, m, s);
+    }
+    function convert(uint256 totalSeconds) public pure returns (string memory) {
+        (uint a, uint b, uint c) = getHMS(totalSeconds);
+        return string(abi.encodePacked(Strings.toString(a), " hours ", Strings.toString(b), " minutes ", Strings.toString(c), " seconds"));
     }
 
 }

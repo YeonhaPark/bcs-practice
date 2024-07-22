@@ -16,38 +16,42 @@ abi.encodePacked() 사용하기
 * 회원가입 기능 - 새롭게 회원가입할 수 있는 기능
 ---------------------------------------------------------------------------
 * 회원가입시 이미 존재한 아이디 체크 여부 기능 - 이미 있는 아이디라면 회원가입 중지
-* 비밀번호 5회 이상 오류시 경고 메세지 기능 - 비밀번호 시도 회수가 5회되면 경고 메세지 반환
+* 비밀번호 5회 이상 오류시 경고 메세지 기능 - 1비밀번호 시도 회수가 5회되면 경고 메세지 반환
 * 회원탈퇴 기능 - 회원이 자신의 ID와 PW를 넣고 회원탈퇴 기능을 실행하면 관련 정보 삭제
 */
+
+// mapping 두개를 이주 매핑으로 바꿔보기! 
 
 contract Security {
     mapping(string => bytes32) pw;
     mapping(string => uint) public warning;
     event Warning(string id, string message);
+    event Success(string id, string message);
 
     function encrypt(string memory id, string memory _pw) public pure returns(bytes32) {
-        return bytes32(keccak256(abi.encodePacked(id, _pw)));
+        return keccak256(abi.encodePacked(id, _pw));
     }
 
-    function login(string memory id, string memory _pw) public returns(string memory) {
+    function login(string memory id, string memory _pw) public returns(bool){
         require(isAlreadyMember(id), "You are not a member");
         if (pw[id] != encrypt(id, _pw)) { // 비밀번호 5회 오류 시 경고 메시지 기능
             warning[id]++;
              if (warning[id] == 5) {
                 emit Warning(id, "You entered wrong password 5 times");
                 warning[id] = 0;
-                return "You entered wrong password 5 times";
             } else {
-                return "Wrong password";
+                emit Warning(id, "Wrong password");
             }
+            return false;
         } else {
             warning[id] = 0;
-           return "Success";
+            emit Success(id, "Success");
+            return true;
         }
     }
 
     function isAlreadyMember(string memory id) public view returns(bool) {
-        return pw[id] != 0 ? true : false;
+        return pw[id] != bytes32(0) ? true : false;
     }
 
     function join(string memory id, string memory _pw) public {
@@ -56,14 +60,10 @@ contract Security {
         }
     }
 
-    function deleteMember(string memory id, string memory _pw) public returns(bool){
-       if  (isAlreadyMember(id) && pw[id] == encrypt(id, _pw)) {
-        pw[id] = 0;
-        warning[id] = 0;
-        return true;
-       } else {
-        return false;
-       }
+    function deleteMember(string memory id, string memory _pw) public {
+        require(isAlreadyMember(id) && pw[id] == encrypt(id, _pw), "Not a member");
+        delete pw[id];
+        delete warning[id];
     }
 
 }

@@ -92,6 +92,7 @@ contract TEST35 {
         evens[j] = array[i];
         j++;
     }
+    return evens;
   }
 }
 /**
@@ -99,15 +100,15 @@ contract TEST35 {
  * a라는 변수의 값이 7이상이면 high, 4이상이면 neutral 그 이후면 low로 상태를 변경시켜주는 함수를 구현하세요.
  */
 contract TEST36 {
-      enum Status {
+      enum Status { // 구조체랑 비슷
         high,
         neutral,
         low
     }
 
-    Status stat;
     
-    function statusSetter(uint a) public {
+    function statusSetter(uint a) public pure returns(Status) {
+        Status stat;
         if (a > 6) {
             stat = Status.high;
         } else if (a > 3) {
@@ -115,6 +116,7 @@ contract TEST36 {
         } else {
             stat = Status.low;
         }
+        return stat;
     }
 }
 /**
@@ -140,6 +142,7 @@ contract TEST37 {
     function withdraw() external {
         require(msg.sender == owner, "Only the owner can withdraw funds");
         payable(owner).transfer(address(this).balance);
+        // contractA.call() // contractA한테 가는것
     }
     receive() external payable {}
     
@@ -200,9 +203,9 @@ contract TEST39 {
     예) [5,2,4,7,1] -> [1,2,4,5,7], 4 // [1,5,4,9,6,3,2,11] 
     -> [1,2,3,4,5,6,9,11], 4,5 // [6,3,1,4,9,7,8] -> [1,3,4,6,7,8,9], 6
  */contract TEST40 {
-       function pushNum(uint[] memory arr) public pure returns(uint[] memory, uint, uint){
+       function pushNum(uint[] memory arr) public pure returns(uint[] memory){
         if (arr.length == 0) {
-           return (arr, 0, 0);
+           return arr;
         } else {
             for (uint i = 0; i < arr.length; i++) {
                 for (uint j = i + 1; j < arr.length; j++) {
@@ -211,11 +214,15 @@ contract TEST39 {
                     }
                 }
             }
-            if (arr.length % 2 == 0) {
-                return (arr, arr[arr.length / 2 - 1], arr[arr.length / 2]);
+            
+            uint[] memory median = new uint[](2 - arr.length % 2);
+            if (median.length == 2) {
+                median[0] = arr[arr.length / 2 - 1];
+                median[1] = arr[arr.length / 2];
             } else {
-                return (arr, arr[arr.length / 2], 0);
+                median[0] = arr[arr.length / 2];
             }
+            return median;
         }
     }
 }

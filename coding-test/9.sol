@@ -30,4 +30,52 @@ contract Password {
         return number && capitalLetter && smallLetter; // 12Aa -> 0x31324161 // ascii 30~39 : 숫자, 41 ~ 5A: 대문자, 61 ~ 7A: 소문자 
 
     }
+
+    function checkPassword2(string memory pw) public pure returns(bool) {
+        bytes memory pwBytes = bytes(pw);
+        uint sign;
+        for (uint i = 0; i < pwBytes.length; i++) {
+            bytes1 target = pwBytes[i];
+            if (target >= 0x30 && target <= 0x39) {
+                sign |= 1;
+            } else if (target >= 0x41 && target <= 0x5A) {
+               sign |= 2;
+            } else if (target >= 0x61 && target <= 0x7A) {
+                sign |= 4;
+            }
+            
+        }
+        // 조건마다 한 영역을 할당하고 or로 하고, 안채워진곳이 있으면 아 이곳은 조건에 충족하지 않았구나 하고 알 수 있음.
+        return sign == 7; 
+
+    }
+
+}
+
+contract Bitwise1 {
+    // and
+    function op1(uint a, uint b) public pure returns(uint){
+        return a & b;
+    }
+
+    //or
+    function op2(uint a, uint b) public pure returns(uint){
+        return a | b;
+    }
+    // xor
+    function op3(uint a, uint b) public pure returns(uint){
+        return a ^ b;
+    }
+
+    function op4(uint a, uint b , uint c) public pure returns(uint, uint, uint) {
+        return (a&b&c, a|b|c, a^b^c);
+    }
+
+    function op5(uint a, uint b, uint c, uint d) public pure returns(uint) {
+        return (a^b^c^d);
+    }
+
+    function op6(uint a) public pure returns(uint) {
+             uint sign;
+    }
 }

@@ -11,29 +11,34 @@ pragma solidity ^0.8.19;
 --------------------------------------------------------
 충전식 기능 - 지불을 미리 해놓고 추후에 주유시 충전금액 차감
 */
-contract Car {
-    uint public speed;
-    uint public fuel;
-    Status public status = Status.off;
+contract Drive {
     enum Status {
         stopped,
         driving,
-        neutral,
-        reverse,
         off
     }
 
+    struct Car {
+        uint speed;
+        uint fuel;
+        Status status;
+    }
+    Car public myCar;
     mapping(address => uint) gasPerAccount;
 
+    receive()external payable {}
+
     modifier checkEngineStat() {
-        require(status != Status.off);
+        require(myCar.status != Status.off);
         _;
     }
     function accelerate() public checkEngineStat {
-        require(speed < 70, "Speed permit until 69");
-        require(fuel > 30, "No fuel left");
-        speed += 10;
-        fuel -= 20;
+        require(myCar.speed < 70 && myCar.fuel > 30, "Nope");
+        myCar.speed += 10;
+        myCar.fuel -= 20;
+        if (myCar.status != Status.driving) {
+            myCar.status = Status.driving;
+        }
     }
 
     function checkIfPrepaid() public view returns(bool){
@@ -45,27 +50,37 @@ contract Car {
     }
 
     function fillGas() public payable {
+        require( myCar.status == Status.off);
         if (checkIfPrepaid()) {
             gasPerAccount[msg.sender] = gasPerAccount[msg.sender] - 1 ether;
         } else {
-            require(msg.value >= 1 ether, "not enough ether");
+            require(msg.value >= 1 ether || address(this).balance >= 1 ether, "not enough ether");
+            if (address(this).balance >= 1 ether) {
+                payable(address(0)).transfer(1 ether);
+                (bool success, ) = address(0).call{value: 1 ether}("");
+
+            }
         }
-        fuel = 100;
+        myCar.fuel = 100;
     }
 
     function speedDown() public checkEngineStat {
-        require(speed > 0, "Cannot break");
-        speed -= 10;
-        fuel -= 10;
+        require(myCar.speed > 0 && myCar.fuel >= 10 && (myCar.status == Status.driving), "Cannot break" );
+        myCar.speed -= 10;
+        myCar.fuel -= 10;
+        if (myCar.speed == 0) {
+            myCar.status = Status.stopped;
+        }
     }
 
     function startEngine() public {
-        status = Status.stopped;
+        require(myCar.status == Status.off, "Status not off");
+        myCar.status = Status.stopped;
 
     }
     function startOffEngine() public {
-        require(speed == 0, "Speed not zero");
-        status = Status.off;
+        require(myCar.status == Status.stopped, "Must be stopped");
+        myCar.status = Status.off;
     }
     // 충전식 기능 - 지불을 미리 해놓고 추후에 주유시 충전금액 차감
     function prepay() public payable {

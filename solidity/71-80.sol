@@ -204,33 +204,21 @@ contract B {
  */
 
 contract TEST80 {
-    uint[] private queue;
-    uint private front;
-    uint private rear;
-
-    constructor() {
-        front = 0;
-        rear = 0;
-    }
-
-    function enqueue(uint value) public {
-        queue.push(value);
-        rear++;
-    }
-
-    function dequeue() public returns (uint) {
-        require(front < rear, "Queue is empty");
-        uint value = queue[front];
-        front++;
-        return value;
-    }
-
-    function isEmpty() public view returns (bool) {
-        return front == rear;
-    }
-
-    function size() public view returns (uint) {
-        return rear - front;
-    }
+    uint[] array;
+   function push(uint n) {
+        array.push(n);
+   }
+   function dequeue() { // [1], [2], [3], [4] => [2], [3]. [4], [1]
+        require(array.length > 0);
+        uint firstEl = array[0];
+        if (array.length == 1) {
+            array.pop();
+        } else {
+            for (uint i = 0; i < array.length - 1; i++) {
+                array[i] = array[i + 1];
+            }
+            array.pop();
+        }
+   }
 }
 

@@ -183,41 +183,35 @@ contract TEST93 {
     }
  }
 /**
- * inline - 4개의 숫자를 받아서 가장 큰수와 작은 수를 반환하는 함수를 구현하세요.
+ * nline - bytes4형 b의 값을 정하는 함수 setB를 구현하세요.
  */
 contract TEST99 {
-    function extreme(uint[] memory a) public pure returns(uint, uint) {
+    bytes4 public b;
+    function setB(bytes4 _b) public {
         assembly {
-            let smallest := mload(add(a, 0x20))
-            let biggest :=  mload(add(a, 0x20))
-            for { let i := 1 } lt(i, 4) { i := add(i, 1) } {
-                let current := mload(add(a, mul(add(i, 1), 0x20)))
-                if lt(current, smallest) { smallest := current }
-                if gt(current, biggest) { biggest := current }
-            }
-            mstore(0x40, smallest)
-            mstore(0x60, biggest)
-            return(0x40, 0x60)
+            let slot := sload(b.slot) 
+            sstore(slot, _b)
         }
     }
 }
 /**
- * inline - 4개의 숫자를 받아서 가장 큰수와 작은 수를 반환하는 함수를 구현하세요.
+ * - 
+1. inline - bytes형 변수 b의 값을 정하는 함수 setB를 구현하세요.
  */
 
  contract TEST100 {
-        function extreme(uint[] memory a) public pure returns(uint, uint) {
+    bytes public b;
+        function setB(bytes memory _b) public {
         assembly {
-            let smallest := mload(add(a, 0x20))
-            let biggest :=  mload(add(a, 0x20))
-            for { let i := 1 } lt(i, 4) { i := add(i, 1) } {
-                let current := mload(add(a, mul(add(i, 1), 0x20)))
-                if lt(current, smallest) { smallest := current }
-                if gt(current, biggest) { biggest := current }
+            let slot := sload(b.slot) 
+            sstore(slot, _b)
+            let elementPosition := keccak256(slot, 0x20)
+            sstore(elementPosition, mload(_b))
+            let data := add(_b, 0x20)
+            let len := mload(_b)
+            for {let i := 0} lt(i, len) {i := add(i, 1)} {
+                sstore(add(slot, i), mload(add(data, mul(i, 0x20))))
             }
-            mstore(0x40, smallest)
-            mstore(0x60, biggest)
-            return(0x40, 0x60)
         }
     }
  }

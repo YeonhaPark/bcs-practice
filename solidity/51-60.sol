@@ -33,14 +33,8 @@ contract TEST51 {
  * 이름, 생일, 지갑주소를 기반으로 만든 해시값의 첫 10바이트를 추출하여 아이디로 만드시오.
  */
 contract TEST52 {
-        function createId(string memory _name, uint _birthday, address _addr) public pure returns (bytes memory) {
-        bytes32 beforeId = keccak256(abi.encodePacked(_name,_birthday,_addr));
-        bytes memory id = new bytes(10);
-        for(uint i=0; i<10;i++) {
-            id[i] = beforeId[i];
-        }
-
-        return (id);
+        function createId(string memory _name, uint _birthday, address _addr) public pure returns (bytes10) {
+        return bytes10(keccak256(abi.encodePacked(_name,_birthday,_addr))); // keccak256의 결과는 bytes32
     }
 }
 
@@ -50,7 +44,7 @@ contract TEST52 {
  * 힌트 : 이중 mapping을 꼭 이용하세요.
  */
 
-contract TEST53 {
+contract TEST53 { // Bank contract 만들어서도 해보기!
     address payable A;
     address payable B;
     address payable C;
@@ -80,11 +74,12 @@ contract TEST53 {
  * 힌트 : 굳이 mapping을 만들 필요는 없습니다.
  */
 contract TEST54 {
-    address public bestGiver;
-    mapping(address => uint) amount;
+    address public honor;
+    uint public max;
     function donation() public payable {
-        if (msg.value > amount[bestGiver]) {
-            bestGiver = msg.sender;
+        if (msg.value > max) {
+            max = msg.value;
+            honor = msg.sender;
         }
     }
 }
@@ -108,10 +103,12 @@ contract TEST55 {
 contract TEST56 {
     address owner;
     address subowner;
+
     mapping(address =>bool) ownerPermit;
     mapping(address =>bool) subownerPermit;
-    constructor(address _owner) {
-        owner = _owner;
+    constructor(address _addr) {
+        owner = msg.sender;
+        subowner = _addr;
     }
 
     function receivePermit(bool) public  {
@@ -196,7 +193,6 @@ contract TEST59 {
     힌트 : 날짜는 그냥 숫자로 기입하세요. 예) 2023년 5월 27일 → 230527
  */
 contract TEST60 {
-    string[2][3] pension;
     mapping(uint => mapping(uint => string[])) guests;
 
     function getGuestsHistory(uint date, uint index) public view returns(string[] memory) {
@@ -204,6 +200,7 @@ contract TEST60 {
     }
 
     function setGuestsHistory(uint date, uint index, string[] memory _guests) public {
+        require(index < 2 && _guests.length < 3);
         guests[date][index] = _guests;
     }
 }

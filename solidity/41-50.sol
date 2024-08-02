@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.19;
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * 숫자만 들어갈 수 있으며 길이가 4인 배열을 (상태변수로)선언하고 
@@ -125,10 +126,8 @@ contract A {
 
 contract B {
     A a = new A();
-    function setA(address _addr) public {
-        a = A(_addr);
-    }
-
+    // contract 단에 있는 변수 네개 : contract, abstract, library, interface
+    // 여기선 상태변수가 없기 때문에 library 방식으로 A가 쓰임. 
     function useAddOfA(uint x, uint y) public view returns (uint) {
        return a.add(x, y);
     }
@@ -152,11 +151,120 @@ contract TEST49 {
     응용 문제 : 3개 아닌 n개의 숫자 이어붙이기
  */
 contract TEST50 {
-    function concatenateNums(uint[] memory nums) public pure returns(uint) {
-        uint sum;
-        for (uint i = 0; i < nums.length; i++) {
-            sum += nums[i] * 10 ** (nums.length - i - 1);
+    function stringToUint(string memory s) public pure returns (uint256) {
+        bytes memory b = bytes(s);
+        uint256 result = 0;
+        for (uint i = 0; i < b.length; i++) {
+            // Ensure each character is a valid digit (0-9)
+            require(b[i] >= 0x30 && b[i] <= 0x39, "Invalid character: must be 0-9");
+            // Calculate the numeric value of the character and update result
+            result = result * 10 + (uint256(uint8(b[i])) - 48);
         }
-        return sum;
+        return result;
+    }
+    // function concatenateNums(uint[] memory nums) public pure returns(string memory) {
+    //      string memory res;
+    //     for (uint i = 0; i < nums.length; i++) {
+    //         res = string.concat(res, uintString(nums[i]));
+    //     }
+    //     return _res;
+    // }
+    function concatenateNums(uint[] memory nums) public pure returns(string memory) {
+         bytes memory res = new bytes(nums.length);
+        for (uint i = 0; i < nums.length; i++) {
+            res = abi.encodePacked(res, uintString(nums[i])); // string의 concat bytes 버전
+        }     
+        return string(res);
+    }
+
+    function getDigits(uint _n) public pure returns(uint) {
+        uint idx = 1;
+        while (_n > 10) {
+            _n = _n / 10;
+            idx++;
+        }
+        return idx;
+    }
+
+    function uintString(uint _num) public pure returns(string memory) {
+        uint length = getDigits(_num);
+        uint arrNum = length-1;
+        bytes memory bString = new bytes(length); // 배열에 각각 숫자들을 저장할 것 
+
+        while (_num > 0) {
+            bString[arrNum] = bytes1(uint8(48 +_num % 10)); // 10진수 -> 16 진수 -> bytes
+            _num /= 10;
+            if (arrNum == 0) {
+                break;
+            }
+            arrNum--;
+        }
+
+        return string(bString); // bytes => string
+    }
+}
+
+
+contract TOSTRING {
+    function A(uint _a) public pure returns(string memory) {
+        return Strings.toString(_a);
+    }
+
+    // string.concat(a,b);
+    function getNumbers(uint[] memory _numbers) public pure returns(string memory) {
+        string memory _res;
+        for(uint i=0; i<_numbers.length; i++) {
+            _res = string.concat(_res, Strings.toString(_numbers[i]));
+        }
+        return _res;
+    }
+
+    function getDigits(uint _num) public pure returns(uint) {
+        uint idx = 1;
+        while(_num >= 10) {
+            _num = _num/10;
+            idx ++;
+        }
+
+        return idx;
+    }
+
+    function uintToBytes(uint8 _num) public pure returns(bytes1) {
+        return bytes1(_num);
+    }
+
+    function uintToString(uint _num) public pure returns(bytes memory) {
+        uint digits = getDigits(_num);
+        bytes memory _b = new bytes(digits);
+        if (_num == 0) {
+            return "0";
+        } else {
+            while(_num != 0) {
+                digits--;
+                _b[digits] = bytes1(uint8(48+_num%10));
+                _num /= 10;
+            }
+        
+            return (_b);
+        }
+    }
+
+    function FINAL(uint[] memory _num) public pure returns(string memory) {
+        bytes memory _b = new bytes(_num.length);
+        for(uint i=0; i<_num.length; i++) {
+            _b = abi.encodePacked(_b, uintToString(_num[i]));
+        }
+
+        return string(_b);
+    }
+}
+
+contract CONDITIONAL_OUTPUT {
+    function get(uint _n) public pure returns(bytes memory) {
+        if (_n > 5) {
+            return abi.encodePacked("String");
+        } else {
+            return abi.encodePacked(_n);
+        }
     }
 }
